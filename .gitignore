@@ -1,3 +1,11 @@
+/.vscode
+*.csv
+*.md 
+*.log
+write_jsonl.py
+scrape.py
+requirements.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
