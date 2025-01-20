@@ -27,10 +27,23 @@ import requests
 from tqdm import tqdm
 
 logging.basicConfig(
-    filename=f'capp_processing_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log',
+    filename=f'cnil_processing_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log',
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
+
+def clean_text(text):
+    """Clean text by removing XML/HTML tags and normalizing whitespace"""
+    if not text:
+        return ""
+    text = re.sub(r'<[^>]+>', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
+    text = text.replace('&amp;', '&')
+    text = text.replace('&lt;', '<')
+    text = text.replace('&gt;', '>')
+    text = text.replace('&quot;', '"')
+    text = text.replace('&apos;', "'")
+    return text.strip()
 
 def get_tar_files(url: str) -> tuple[List[str], List[str]]:
     """
@@ -156,11 +169,15 @@ def parse_cnil_xml_file(xml_path):
         ]:
             data_extracted[field.lower()] = meta.findtext(field, "")
 
-        contenu = root.find(".//CONTENU")
+        """contenu = root.find(".//CONTENU")
         if contenu is not None:
             data_extracted["contenu"] = ET.tostring(
                 contenu, encoding="unicode", method="text"
-            ).strip()
+            ).strip()"""
+        contenu_element = root.find('.//CONTENU')
+        if contenu_element is not None:
+            content = ''.join(contenu_element.itertext())
+            data_extracted["contenu"] = clean_text(content)
 
         return data_extracted
     except ET.ParseError as e:
@@ -212,4 +229,5 @@ def tar_dila_data(base):
 
 
 if __name__ == "__main__":
+    # https://huggingface.co/datasets/La-Mousse/CNIL-18-01-2025
     tar_dila_data("CNIL")
